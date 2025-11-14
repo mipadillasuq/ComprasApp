@@ -1,6 +1,7 @@
 package com.example.Compras.controller;
 
-import com.example.Compras.entities.DetalleCompra;
+import com.example.Compras.dto.DetalleCompraRequestDTO;
+import com.example.Compras.dto.DetalleCompraResponseDTO;
 import com.example.Compras.services.DetalleCompraService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,33 +21,53 @@ public class DetalleCompraController {
         this.detalleCompraService = detalleCompraService;
     }
 
-
-    @Operation(summary = "Listar todos los detalle compra")
+    // ======================================================================
+    //  🔵 LISTAR TODOS LOS DETALLES COMO DTO
+    // ======================================================================
+    @Operation(summary = "Listar todos los detalles de compra")
     @GetMapping
-    public List<DetalleCompra> listar() {
-        return detalleCompraService.getAll();
+    public List<DetalleCompraResponseDTO> listar() {
+        return detalleCompraService.getAllDto();
     }
 
-    @Operation(summary = "Obtener un detalle compra por ID")
+    // ======================================================================
+    //  🔵 OBTENER 1 DETALLE COMO DTO
+    // ======================================================================
+    @Operation(summary = "Obtener un detalle de compra por ID")
     @GetMapping("/{id}")
-    public ResponseEntity<DetalleCompra> obtenerPorId(@PathVariable Long id) {
-        return detalleCompraService.getDetalleCompraById(id)
+    public ResponseEntity<DetalleCompraResponseDTO> obtener(@PathVariable Long id) {
+        return detalleCompraService.getByIdDto(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    @Operation(summary = "Crear un detalle compra")
+
+    // ======================================================================
+    //  🔵 CREAR UN DETALLE DESDE DTO
+    // ======================================================================
+    @Operation(summary = "Crear un detalle de compra")
     @PostMapping
-    public DetalleCompra crear(@RequestBody DetalleCompra detalleCompra) {
-        return detalleCompraService.save(detalleCompra);
+    public ResponseEntity<Void> crear(@RequestBody DetalleCompraRequestDTO dto) {
+        try {
+            detalleCompraService.crearDesdeDto(dto);
+            return ResponseEntity.ok().build(); // ✅ NO DEVUELVE JSON → EVITA ERROR 500
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
-    @Operation(summary = "Eliminar un detalle compra")
+
+    // ======================================================================
+    //  🔵 ELIMINAR UN DETALLE
+    // ======================================================================
+    @Operation(summary = "Eliminar un detalle de compra")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (detalleCompraService.getDetalleCompraById(id).isPresent()) {
-            detalleCompraService.eliminar(id);
-            return ResponseEntity.noContent().build();
+        if (detalleCompraService.getByIdDto(id).isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.notFound().build();
+        detalleCompraService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }
+

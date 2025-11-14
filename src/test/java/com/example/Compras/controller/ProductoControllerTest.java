@@ -1,5 +1,6 @@
 package com.example.Compras.controller;
 
+import com.example.Compras.dto.ProductoRequestDTO;
 import com.example.Compras.entities.Producto;
 import com.example.Compras.services.ProductoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -90,7 +91,7 @@ class ProductoControllerTest {
 
     @Test
     void crear_DeberiaRetornar200YProductoCreado() throws Exception {
-        Mockito.when(productoService.guardar(Mockito.any(Producto.class))).thenReturn(producto1);
+        Mockito.when(productoService.guardar(Mockito.any(ProductoRequestDTO.class))).thenReturn(producto1);
 
         mockMvc.perform(post("/productos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +108,7 @@ class ProductoControllerTest {
         actualizado.setPrecio(1500.0);
 
         Mockito.when(productoService.getProductoById(1L)).thenReturn(Optional.of(producto1));
-        Mockito.when(productoService.guardar(Mockito.any(Producto.class))).thenReturn(actualizado);
+        Mockito.when(productoService.guardar(Mockito.any(ProductoRequestDTO.class))).thenReturn(actualizado);
 
         mockMvc.perform(put("/productos/1")
                         .contentType(MediaType.APPLICATION_JSON)

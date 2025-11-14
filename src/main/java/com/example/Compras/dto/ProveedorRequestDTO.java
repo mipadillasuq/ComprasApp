@@ -3,26 +3,27 @@ package com.example.Compras.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public class ProveedorRequestDTO {
-    @NotNull
-    private Long idProveedor;
 
-    @NotBlank
+    @NotBlank(message = "El nombre del proveedor es obligatorio.")
+    @Size(max = 100, message = "El nombre no puede tener más de 100 caracteres.")
     private String nombre;
 
-    private Long ciudadId;
+    @NotNull(message = "La ciudad es obligatoria.")
+    private Long ciudadId; // ✅ cambiado a Long para coincidir con entidad Ciudad y DTO de respuesta
+
+    @Size(max = 150, message = "La dirección no puede tener más de 150 caracteres.")
     private String direccion;
 
-    @Email
+    @Email(message = "El correo electrónico no tiene un formato válido.")
+    @Size(max = 100, message = "El correo electrónico no puede tener más de 100 caracteres.")
     private String email;
 
-    private Boolean estado;
+    private Boolean estado = true; // ✅ valor por defecto al crear
 
-    // getters / setters
-    public Long getIdProveedor() { return idProveedor; }
-    public void setIdProveedor(Long idProveedor) { this.idProveedor = idProveedor; }
-
+    // ===== Getters & Setters =====
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 

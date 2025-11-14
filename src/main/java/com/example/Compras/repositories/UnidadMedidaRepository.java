@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface UnidadMedidaRepository extends JpaRepository<UnidadMedida, Integer> {
+public interface UnidadMedidaRepository extends JpaRepository<UnidadMedida,Long> {
     Optional<UnidadMedida> findByNombreIgnoreCase(String nombre);
 }

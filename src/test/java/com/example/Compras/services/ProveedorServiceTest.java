@@ -36,9 +36,8 @@ class ProveedorServiceTest {
     @Test
     void crearProveedor_DeberiaCrearCorrectamente() {
         ProveedorRequestDTO dto = new ProveedorRequestDTO();
-        dto.setIdProveedor(1L);
         dto.setNombre("Proveedor Uno");
-        dto.setCiudadId(10L);
+        dto.setCiudadId(10);
         dto.setDireccion("Calle 123");
         dto.setEmail("test@correo.com");
         dto.setEstado(true);
@@ -61,7 +60,6 @@ class ProveedorServiceTest {
     @Test
     void crearProveedor_DeberiaLanzarErrorSiExiste() {
         ProveedorRequestDTO dto = new ProveedorRequestDTO();
-        dto.setIdProveedor(1L);
         when(proveedorRepository.existsById(1L)).thenReturn(true);
 
         assertThrows(ResponseStatusException.class, () -> proveedorService.crearProveedor(dto));

@@ -89,21 +89,21 @@ class UnidadMedidaServiceTest {
         unidad.setId(1L);
         unidad.setNombre("Metro");
 
-        when(unidadMedidaRepository.findById(1))
+        when(unidadMedidaRepository.findById(1L))
                 .thenReturn(Optional.of(unidad));
 
-        UnidadMedidaResponseDTO result = unidadMedidaService.buscarPorId(1);
+        UnidadMedidaResponseDTO result = unidadMedidaService.buscarPorId(1L);
 
         assertEquals("Metro", result.getNombre());
-        verify(unidadMedidaRepository).findById(1);
+        verify(unidadMedidaRepository).findById(1L);
     }
 
     @Test
     void buscarPorId_DeberiaLanzarErrorSiNoExiste() {
-        when(unidadMedidaRepository.findById(5)).thenReturn(Optional.empty());
+        when(unidadMedidaRepository.findById(5L)).thenReturn(Optional.empty());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> unidadMedidaService.buscarPorId(5));
+                () -> unidadMedidaService.buscarPorId(5L));
 
         assertTrue(ex.getMessage().contains("No se encontró"));
     }
@@ -118,11 +118,11 @@ class UnidadMedidaServiceTest {
         existente.setId(1L);
         existente.setNombre("Metro");
 
-        when(unidadMedidaRepository.findById(1)).thenReturn(Optional.of(existente));
+        when(unidadMedidaRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(unidadMedidaRepository.findByNombreIgnoreCase("Centímetro")).thenReturn(Optional.empty());
         when(unidadMedidaRepository.save(any(UnidadMedida.class))).thenReturn(existente);
 
-        UnidadMedidaResponseDTO result = unidadMedidaService.actualizarUnidad(1, request);
+        UnidadMedidaResponseDTO result = unidadMedidaService.actualizarUnidad(1L, request);
 
         assertEquals("Centímetro", result.getNombre());
         verify(unidadMedidaRepository).save(any(UnidadMedida.class));
@@ -133,10 +133,10 @@ class UnidadMedidaServiceTest {
         UnidadMedidaRequestDTO request = new UnidadMedidaRequestDTO();
         request.setNombre("Mililitro");
 
-        when(unidadMedidaRepository.findById(1)).thenReturn(Optional.empty());
+        when(unidadMedidaRepository.findById(1L)).thenReturn(Optional.empty());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> unidadMedidaService.actualizarUnidad(1, request));
+                () -> unidadMedidaService.actualizarUnidad(1L, request));
 
         assertTrue(ex.getMessage().contains("No se encontró"));
     }
@@ -153,11 +153,11 @@ class UnidadMedidaServiceTest {
         duplicada.setId(2L);
         duplicada.setNombre("Litro");
 
-        when(unidadMedidaRepository.findById(1)).thenReturn(Optional.of(existente));
+        when(unidadMedidaRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(unidadMedidaRepository.findByNombreIgnoreCase("Litro")).thenReturn(Optional.of(duplicada));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> unidadMedidaService.actualizarUnidad(1, request));
+                () -> unidadMedidaService.actualizarUnidad(1L, request));
 
         assertTrue(ex.getMessage().contains("Ya existe otra unidad"));
     }
@@ -165,19 +165,19 @@ class UnidadMedidaServiceTest {
     // 🧩 Eliminar unidad
     @Test
     void eliminarUnidad_DeberiaEliminarCorrectamente() {
-        when(unidadMedidaRepository.existsById(1)).thenReturn(true);
+        when(unidadMedidaRepository.existsById(1L)).thenReturn(true);
 
-        unidadMedidaService.eliminarUnidad(1);
+        unidadMedidaService.eliminarUnidad(1L);
 
-        verify(unidadMedidaRepository).deleteById(1);
+        verify(unidadMedidaRepository).deleteById(1L);
     }
 
     @Test
     void eliminarUnidad_DeberiaLanzarErrorSiNoExiste() {
-        when(unidadMedidaRepository.existsById(10)).thenReturn(false);
+        when(unidadMedidaRepository.existsById(10L)).thenReturn(false);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> unidadMedidaService.eliminarUnidad(10));
+                () -> unidadMedidaService.eliminarUnidad(10L));
 
         assertTrue(ex.getMessage().contains("No existe una unidad"));
     }

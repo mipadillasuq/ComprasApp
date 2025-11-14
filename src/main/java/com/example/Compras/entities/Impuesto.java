@@ -1,11 +1,17 @@
 package com.example.Compras.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Entity
 @Table(name = "impuestos")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Impuesto {
 
     @Id
@@ -20,40 +26,4 @@ public class Impuesto {
     @Column(name = "porcentaje", nullable = false)
     private Double porcentaje;
 
-    @OneToMany(mappedBy = "impuesto", cascade = CascadeType.ALL, orphanRemoval = false)
-    private List<Producto> productos;
-
-    public Impuesto() {
-    }
-
-    public Impuesto(Long id, String nombre, Double porcentaje, List<Producto> productos) {
-        this.id = id;
-        this.nombre = nombre;
-        this.porcentaje = porcentaje;
-        this.productos = productos;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public Double getPorcentaje() {
-        return porcentaje;
-    }
-
-    public void setPorcentaje(Double porcentaje) {
-        this.porcentaje = porcentaje;
-    }
 }

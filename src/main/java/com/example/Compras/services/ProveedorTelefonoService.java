@@ -1,8 +1,7 @@
 package com.example.Compras.services;
-import com.example.Compras.dto.ProveedorResponseDTO;
+
 import com.example.Compras.dto.ProveedorTelefonoRequestDTO;
 import com.example.Compras.dto.ProveedorTelefonoResponseDTO;
-import com.example.Compras.dto.TelefonoResponseDTO;
 import com.example.Compras.entities.Proveedor;
 import com.example.Compras.entities.ProveedorTelefono;
 import com.example.Compras.entities.Telefono;
@@ -17,6 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProveedorTelefonoService {
+
     private final ProveedorTelefonoRepository proveedorTelefonoRepository;
     private final ProveedorRepository proveedorRepository;
     private final TelefonoRepository telefonoRepository;
@@ -29,14 +29,24 @@ public class ProveedorTelefonoService {
         this.telefonoRepository = telefonoRepository;
     }
 
-    // Crear una relación proveedor-teléfono
     @Transactional
     public ProveedorTelefonoResponseDTO crearRelacion(ProveedorTelefonoRequestDTO request) {
+
         Proveedor proveedor = proveedorRepository.findById(request.getIdProveedor())
-                .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado con ID: " + request.getIdProveedor()));
 
         Telefono telefono = telefonoRepository.findById(request.getIdTelefono())
-                .orElseThrow(() -> new IllegalArgumentException("Teléfono no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Teléfono no encontrado con ID: " + request.getIdTelefono()));
+
+        // Verificar si la relación ya existe
+        boolean existe = proveedorTelefonoRepository.existsByProveedorIdAndTelefonoId(
+                request.getIdProveedor(),
+                request.getIdTelefono()
+        );
+
+        if (existe) {
+            throw new IllegalArgumentException("La relación proveedor-teléfono ya existe");
+        }
 
         ProveedorTelefono relacion = new ProveedorTelefono();
         relacion.setProveedor(proveedor);
@@ -53,9 +63,13 @@ public class ProveedorTelefonoService {
         );
     }
 
-    // Listar teléfonos de un proveedor
     @Transactional(readOnly = true)
     public List<ProveedorTelefonoResponseDTO> listarPorProveedor(Long idProveedor) {
+
+        if (!proveedorRepository.existsById(idProveedor)) {
+            throw new IllegalArgumentException("Proveedor no encontrado con ID: " + idProveedor);
+        }
+
         return proveedorTelefonoRepository.findByProveedorId(idProveedor).stream()
                 .map(r -> new ProveedorTelefonoResponseDTO(
                         r.getId(),
@@ -67,7 +81,6 @@ public class ProveedorTelefonoService {
                 .collect(Collectors.toList());
     }
 
-    // Eliminar relación
     @Transactional
     public void eliminarRelacion(Long id) {
         if (!proveedorTelefonoRepository.existsById(id)) {
@@ -76,10 +89,10 @@ public class ProveedorTelefonoService {
         proveedorTelefonoRepository.deleteById(id);
     }
 
+    @Transactional(readOnly = true)
     public List<ProveedorTelefonoResponseDTO> listarTodos() {
-        List<ProveedorTelefono> relaciones = proveedorTelefonoRepository.findAll();
 
-        return relaciones.stream()
+        return proveedorTelefonoRepository.findAll().stream()
                 .map(relacion -> new ProveedorTelefonoResponseDTO(
                         relacion.getId(),
                         relacion.getProveedor().getId(),
@@ -90,3 +103,4 @@ public class ProveedorTelefonoService {
                 .collect(Collectors.toList());
     }
 }
+

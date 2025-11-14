@@ -3,23 +3,28 @@ package com.example.Compras.dto;
 import java.util.List;
 
 public class ProveedorResponseDTO {
-    private Long idProveedor;
+
+    private Long id;           // ✅ antes idProveedor
     private String nombre;
     private Long ciudadId;
+    private String ciudadNombre; // ✅ campo extra para mostrar el nombre directamente
     private String direccion;
     private String email;
     private Boolean estado;
-    private List<String> telefonos; // números
+    private List<String> telefonos;
 
-    // getters / setters
-    public Long getIdProveedor() { return idProveedor; }
-    public void setIdProveedor(Long idProveedor) { this.idProveedor = idProveedor; }
+    // ===== Getters & Setters =====
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
     public Long getCiudadId() { return ciudadId; }
     public void setCiudadId(Long ciudadId) { this.ciudadId = ciudadId; }
+
+    public String getCiudadNombre() { return ciudadNombre; }
+    public void setCiudadNombre(String ciudadNombre) { this.ciudadNombre = ciudadNombre; }
 
     public String getDireccion() { return direccion; }
     public void setDireccion(String direccion) { this.direccion = direccion; }
@@ -33,3 +38,4 @@ public class ProveedorResponseDTO {
     public List<String> getTelefonos() { return telefonos; }
     public void setTelefonos(List<String> telefonos) { this.telefonos = telefonos; }
 }
+

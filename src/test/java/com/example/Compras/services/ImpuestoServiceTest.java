@@ -81,11 +81,11 @@ class ImpuestoServiceTest {
         existente.setNombre("Impuesto Anterior");
         existente.setPorcentaje(18.0);
 
-        when(impuestoRepository.findById(1)).thenReturn(Optional.of(existente));
+        when(impuestoRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(impuestoRepository.findByNombreIgnoreCase("IVA")).thenReturn(Optional.empty());
         when(impuestoRepository.save(any(Impuesto.class))).thenReturn(existente);
 
-        ImpuestoResponseDTO result = impuestoService.actualizarImpuesto(1, request);
+        ImpuestoResponseDTO result = impuestoService.actualizarImpuesto(1L, request);
 
         assertEquals("IVA", result.getNombre());
         assertEquals(21.0, result.getPorcentaje());
@@ -97,10 +97,10 @@ class ImpuestoServiceTest {
         ImpuestoRequestDTO request = new ImpuestoRequestDTO();
         request.setNombre("Nuevo Impuesto");
 
-        when(impuestoRepository.findById(99)).thenReturn(Optional.empty());
+        when(impuestoRepository.findById(99L)).thenReturn(Optional.empty());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> impuestoService.actualizarImpuesto(99, request));
+                () -> impuestoService.actualizarImpuesto(99L, request));
 
         assertTrue(ex.getMessage().contains("No se encontró el impuesto"));
     }
@@ -117,11 +117,11 @@ class ImpuestoServiceTest {
         otro.setId(2L);
         otro.setNombre("IVA");
 
-        when(impuestoRepository.findById(1)).thenReturn(Optional.of(existente));
+        when(impuestoRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(impuestoRepository.findByNombreIgnoreCase("IVA")).thenReturn(Optional.of(otro));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> impuestoService.actualizarImpuesto(1, request));
+                () -> impuestoService.actualizarImpuesto(1L, request));
 
         assertTrue(ex.getMessage().contains("Ya existe otro impuesto"));
     }
@@ -129,19 +129,19 @@ class ImpuestoServiceTest {
     // 🧩 Eliminar impuesto
     @Test
     void eliminarImpuesto_DeberiaEliminarCorrectamente() {
-        when(impuestoRepository.existsById(1)).thenReturn(true);
+        when(impuestoRepository.existsById(1L)).thenReturn(true);
 
-        impuestoService.eliminarImpuesto(1);
+        impuestoService.eliminarImpuesto(1L);
 
-        verify(impuestoRepository).deleteById(1);
+        verify(impuestoRepository).deleteById(1L);
     }
 
     @Test
     void eliminarImpuesto_DeberiaLanzarErrorSiNoExiste() {
-        when(impuestoRepository.existsById(10)).thenReturn(false);
+        when(impuestoRepository.existsById(10L)).thenReturn(false);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> impuestoService.eliminarImpuesto(10));
+                () -> impuestoService.eliminarImpuesto(10L));
 
         assertTrue(ex.getMessage().contains("No se encontró el impuesto"));
     }
@@ -175,21 +175,21 @@ class ImpuestoServiceTest {
         i.setNombre("IVA");
         i.setPorcentaje(19.0);
 
-        when(impuestoRepository.findById(1)).thenReturn(Optional.of(i));
+        when(impuestoRepository.findById(1L)).thenReturn(Optional.of(i));
 
-        ImpuestoResponseDTO result = impuestoService.obtenerImpuestoPorId(1);
+        ImpuestoResponseDTO result = impuestoService.obtenerImpuestoPorId(1L);
 
         assertEquals("IVA", result.getNombre());
         assertEquals(19.0, result.getPorcentaje());
-        verify(impuestoRepository).findById(1);
+        verify(impuestoRepository).findById(1L);
     }
 
     @Test
     void obtenerImpuestoPorId_DeberiaLanzarErrorSiNoExiste() {
-        when(impuestoRepository.findById(5)).thenReturn(Optional.empty());
+        when(impuestoRepository.findById(5L)).thenReturn(Optional.empty());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> impuestoService.obtenerImpuestoPorId(5));
+                () -> impuestoService.obtenerImpuestoPorId(5L));
 
         assertTrue(ex.getMessage().contains("No se encontró el impuesto"));
     }

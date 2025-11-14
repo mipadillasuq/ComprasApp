@@ -12,58 +12,60 @@ import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService {
+
     private final UsuarioRepository usuarioRepository;
 
     public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // Crear usuario
+    // ==========================================================
+    // ✅ CREAR USUARIO
+    // ==========================================================
     @Transactional
     public UsuarioResponseDTO crearUsuario(UsuarioRequestDTO request) {
         usuarioRepository.findByEmailIgnoreCase(request.getEmail())
-                .ifPresent(u -> { throw new IllegalArgumentException("Ya existe un usuario con ese correo electrónico."); });
+                .ifPresent(u -> {
+                    throw new IllegalArgumentException("Ya existe un usuario con ese correo electrónico.");
+                });
 
         Usuario usuario = new Usuario();
         usuario.setNombre(request.getNombre());
         usuario.setEmail(request.getEmail());
         usuario.setTelefono(request.getTelefono());
         usuario.setPassword(request.getPassword());
-        usuario.setEstado((byte) 1);
+        usuario.setEstado(request.getEstado() != null ? request.getEstado() : (byte) 1);
+        usuario.setRol(request.getRol());
 
         Usuario guardado = usuarioRepository.save(usuario);
-        return new UsuarioResponseDTO(
-                guardado.getId(),
-                guardado.getNombre(),
-                guardado.getEmail(),
-                guardado.getTelefono(),
-                guardado.getEstado()
-        );
+        return mapToDTO(guardado);
     }
 
-    // Listar todos
+    // ==========================================================
+    // ✅ LISTAR TODOS LOS USUARIOS
+    // ==========================================================
     @Transactional(readOnly = true)
     public List<UsuarioResponseDTO> listarTodos() {
         return usuarioRepository.findAll()
                 .stream()
-                .map(u -> new UsuarioResponseDTO(
-                        u.getId(), u.getNombre(), u.getEmail(), u.getTelefono(), u.getEstado()))
+                .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
 
-    // Buscar por ID
+    // ==========================================================
+    // ✅ BUSCAR POR ID
+    // ==========================================================
     @Transactional(readOnly = true)
     public UsuarioResponseDTO buscarPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario con id " + id));
 
-        return new UsuarioResponseDTO(
-                usuario.getId(), usuario.getNombre(), usuario.getEmail(),
-                usuario.getTelefono(), usuario.getEstado()
-        );
+        return mapToDTO(usuario);
     }
 
-    // Actualizar usuario
+    // ==========================================================
+    // ✅ ACTUALIZAR USUARIO
+    // ==========================================================
     @Transactional
     public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioRequestDTO request) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -71,30 +73,46 @@ public class UsuarioService {
 
         usuarioRepository.findByEmailIgnoreCase(request.getEmail())
                 .filter(u -> !u.getId().equals(id))
-                .ifPresent(u -> { throw new IllegalArgumentException("Ya existe otro usuario con ese correo."); });
+                .ifPresent(u -> {
+                    throw new IllegalArgumentException("Ya existe otro usuario con ese correo.");
+                });
 
+        // 🔹 Actualizar campos
         usuario.setNombre(request.getNombre());
         usuario.setEmail(request.getEmail());
         usuario.setTelefono(request.getTelefono());
-        usuario.setPassword(request.getPassword());
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            usuario.setPassword(request.getPassword());
+        }
+
+        if (request.getEstado() != null) {
+            usuario.setEstado(request.getEstado());
+        }
+
+        if (request.getRol() != null) {
+            usuario.setRol(request.getRol());
+        }
 
         Usuario actualizado = usuarioRepository.save(usuario);
-        return new UsuarioResponseDTO(
-                actualizado.getId(), actualizado.getNombre(), actualizado.getEmail(),
-                actualizado.getTelefono(), actualizado.getEstado()
-        );
+        return mapToDTO(actualizado);
     }
 
-    // Cambiar estado (activar / desactivar)
+    // ==========================================================
+    // ✅ CAMBIAR ESTADO (activar / desactivar)
+    // ==========================================================
     @Transactional
     public void cambiarEstado(Long id, Byte nuevoEstado) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario con id " + id));
+
         usuario.setEstado(nuevoEstado);
         usuarioRepository.save(usuario);
     }
 
-    // Eliminar usuario
+    // ==========================================================
+    // ✅ ELIMINAR USUARIO
+    // ==========================================================
     @Transactional
     public void eliminarUsuario(Long id) {
         if (!usuarioRepository.existsById(id)) {
@@ -102,4 +120,19 @@ public class UsuarioService {
         }
         usuarioRepository.deleteById(id);
     }
+
+    // ==========================================================
+    // 🧩 MÉTODO AUXILIAR PARA MAPEAR ENTIDAD → DTO
+    // ==========================================================
+    private UsuarioResponseDTO mapToDTO(Usuario u) {
+        return new UsuarioResponseDTO(
+                u.getId(),
+                u.getNombre(),
+                u.getEmail(),
+                u.getTelefono(),
+                u.getEstado(),
+                u.getRol() != null ? u.getRol().name() : null
+        );
+    }
 }
+

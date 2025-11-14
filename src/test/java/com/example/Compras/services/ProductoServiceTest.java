@@ -1,11 +1,13 @@
 package com.example.Compras.services;
 
-import com.example.Compras.entities.Producto;
-import com.example.Compras.repositories.ProductoRepository;
+import com.example.Compras.dto.ProductoRequestDTO;
+import com.example.Compras.entities.*;
+import com.example.Compras.repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
@@ -20,8 +22,21 @@ class ProductoServiceTest {
     @Mock
     private ProductoRepository productoRepository;
 
+    @Mock
+    private CategoriaRepository categoriaRepository;
+
+    @Mock
+    private MarcaRepository marcaRepository;
+
+    @Mock
+    private UnidadMedidaRepository unidadMedidaRepository;
+
+    @Mock
+    private ImpuestoRepository impuestoRepository;
+
     @InjectMocks
     private ProductoService productoService;
+
 
     @BeforeEach
     void setUp() {
@@ -77,15 +92,40 @@ class ProductoServiceTest {
     // 🧩 guardar()
     @Test
     void guardar_DeberiaGuardarYRetornarProducto() {
-        Producto p = new Producto();
-        p.setNombre("Café");
+        ProductoRequestDTO dto = new ProductoRequestDTO();
+        dto.setNombre("Arroz");
+        dto.setPrecio(3000.0);
+        dto.setStock(15);
+        dto.setCategoriaId(1L);
+        dto.setMarcaId(1L);
+        dto.setUnidadMedidaId(1L);
+        dto.setImpuestoId(1L);
 
-        when(productoRepository.save(p)).thenReturn(p);
+        Categoria categoria = new Categoria();
+        categoria.setId(1L);
+        Marca marca = new Marca();
+        marca.setId(1L);
+        UnidadMedida unidad = new UnidadMedida();
+        unidad.setId(1L);
+        Impuesto impuesto = new Impuesto();
+        impuesto.setId(1L);
 
-        Producto result = productoService.guardar(p);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoria));
+        when(marcaRepository.findById(1L)).thenReturn(Optional.of(marca));
+        when(unidadMedidaRepository.findById(1L)).thenReturn(Optional.of(unidad));
+        when(impuestoRepository.findById(1L)).thenReturn(Optional.of(impuesto));
 
-        assertEquals("Café", result.getNombre());
-        verify(productoRepository).save(p);
+        Producto productoGuardado = new Producto();
+        productoGuardado.setNombre(dto.getNombre());
+        when(productoRepository.save(Mockito.any(Producto.class))).thenReturn(productoGuardado);
+
+        // Act
+        Producto result = productoService.guardar(dto);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Arroz", result.getNombre());
+
     }
 
     // 🧩 eliminar()

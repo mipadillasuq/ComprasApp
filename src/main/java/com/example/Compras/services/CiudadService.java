@@ -13,34 +13,52 @@ import java.util.stream.Collectors;
 
 @Service
 public class CiudadService {
+
     private final CiudadRepository ciudadRepository;
 
     public CiudadService(CiudadRepository ciudadRepository) {
         this.ciudadRepository = ciudadRepository;
     }
 
+    // =========================================================
+    // 🟢 Crear ciudad
+    // =========================================================
     public CiudadResponseDTO crearCiudad(CiudadRequestDTO dto) {
         ciudadRepository.findByNombreIgnoreCase(dto.getNombre())
-                .ifPresent(c -> { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La ciudad ya existe"); });
+                .ifPresent(c -> {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La ciudad ya existe");
+                });
 
         Ciudad ciudad = new Ciudad(dto.getNombre());
-        ciudadRepository.save(ciudad);
-        return mapToResponse(ciudad);
+        Ciudad guardada = ciudadRepository.save(ciudad);
+
+        return mapToResponse(guardada);
     }
 
+    // =========================================================
+    // 🟢 Listar ciudades
+    // =========================================================
     public List<CiudadResponseDTO> listarCiudades() {
         return ciudadRepository.findAll()
-                .stream().map(this::mapToResponse)
+                .stream()
+                .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
-    public CiudadResponseDTO obtenerCiudad(Integer id) {
+    // =========================================================
+    // 🟢 Obtener ciudad por ID
+    // =========================================================
+    public CiudadResponseDTO obtenerCiudad(Long id) { // ✅ cambiado a Long
         Ciudad ciudad = ciudadRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ciudad no encontrada"));
+
         return mapToResponse(ciudad);
     }
 
-    public CiudadResponseDTO actualizarCiudad(Integer id, CiudadRequestDTO dto) {
+    // =========================================================
+    // 🟡 Actualizar ciudad
+    // =========================================================
+    public CiudadResponseDTO actualizarCiudad(Long id, CiudadRequestDTO dto) { // ✅ Long
         Ciudad ciudad = ciudadRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ciudad no encontrada"));
 
@@ -52,17 +70,24 @@ public class CiudadService {
                 });
 
         ciudad.setNombre(dto.getNombre());
-        ciudadRepository.save(ciudad);
-        return mapToResponse(ciudad);
+        Ciudad actualizada = ciudadRepository.save(ciudad);
+
+        return mapToResponse(actualizada);
     }
 
-    public void eliminarCiudad(Integer id) {
+    // =========================================================
+    // 🔴 Eliminar ciudad
+    // =========================================================
+    public void eliminarCiudad(Long id) { // ✅ Long
         if (!ciudadRepository.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ciudad no encontrada");
         }
         ciudadRepository.deleteById(id);
     }
 
+    // =========================================================
+    // 🧭 Mapeo a DTO
+    // =========================================================
     private CiudadResponseDTO mapToResponse(Ciudad ciudad) {
         CiudadResponseDTO dto = new CiudadResponseDTO();
         dto.setId(ciudad.getId());
@@ -70,3 +95,4 @@ public class CiudadService {
         return dto;
     }
 }
+

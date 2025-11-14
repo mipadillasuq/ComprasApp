@@ -1,45 +1,37 @@
 package com.example.Compras.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name="detalle_compra")
+@Table(name = "detalle_compra")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class DetalleCompra {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_detalle_compra")
-    private Long idDetalleCompra;
+    private Long id;
 
+    @Column(nullable = false)
     private Integer cantidad;
 
-    @ManyToOne
+    @Column(nullable = false)
+    private Double precioUnitario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_compra", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Compra compra;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_producto", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Producto producto;
-
-    public DetalleCompra(Long idDetalleCompra, Integer cantidad, Compra compra, Producto producto) {
-        this.idDetalleCompra = idDetalleCompra;
-        this.cantidad = cantidad;
-        this.compra = compra;
-        this.producto = producto;
-    }
-
-    public DetalleCompra() {
-    }
-
-    public Long getIdDetalleCompra() { return idDetalleCompra; }
-    public void setIdDetalleCompra(Long idDetalleCompra) { this.idDetalleCompra = idDetalleCompra; }
-
-    public Integer getCantidad() { return cantidad; }
-    public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
-
-    public Compra getCompra() { return compra; }
-    public void setCompra(Compra compra) { this.compra = compra; }
-
-    public Producto getProducto() { return producto; }
-    public void setProducto(Producto producto) { this.producto = producto; }
 }
+

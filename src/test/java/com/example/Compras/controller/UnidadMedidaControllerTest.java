@@ -84,7 +84,7 @@ class UnidadMedidaControllerTest {
 
     @Test
     void buscarPorId_DeberiaRetornar200YUnidad() throws Exception {
-        Mockito.when(unidadMedidaService.buscarPorId(1)).thenReturn(responseDTO1);
+        Mockito.when(unidadMedidaService.buscarPorId(1L)).thenReturn(responseDTO1);
 
         mockMvc.perform(get("/unidad-medida/1"))
                 .andExpect(status().isOk())
@@ -95,7 +95,7 @@ class UnidadMedidaControllerTest {
     void actualizarUnidad_DeberiaRetornar200YUnidadActualizada() throws Exception {
         UnidadMedidaResponseDTO actualizado = new UnidadMedidaResponseDTO(1L, "Gramo");
 
-        Mockito.when(unidadMedidaService.actualizarUnidad(Mockito.eq(1), Mockito.any(UnidadMedidaRequestDTO.class)))
+        Mockito.when(unidadMedidaService.actualizarUnidad(Mockito.eq(1L), Mockito.any(UnidadMedidaRequestDTO.class)))
                 .thenReturn(actualizado);
 
         mockMvc.perform(put("/unidad-medida/1")
@@ -110,7 +110,7 @@ class UnidadMedidaControllerTest {
         mockMvc.perform(delete("/unidad-medida/1"))
                 .andExpect(status().isNoContent());
 
-        Mockito.verify(unidadMedidaService).eliminarUnidad(1);
+        Mockito.verify(unidadMedidaService).eliminarUnidad(1L);
     }
 }
 

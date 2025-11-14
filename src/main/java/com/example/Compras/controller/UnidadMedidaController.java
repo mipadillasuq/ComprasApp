@@ -32,18 +32,18 @@ public class UnidadMedidaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UnidadMedidaResponseDTO> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<UnidadMedidaResponseDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(unidadMedidaService.buscarPorId(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UnidadMedidaResponseDTO> actualizarUnidad(@PathVariable Integer id,
+    public ResponseEntity<UnidadMedidaResponseDTO> actualizarUnidad(@PathVariable Long id,
                                                                     @Valid @RequestBody UnidadMedidaRequestDTO request) {
         return ResponseEntity.ok(unidadMedidaService.actualizarUnidad(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarUnidad(@PathVariable Integer id) {
+    public ResponseEntity<Void> eliminarUnidad(@PathVariable Long id) {
         unidadMedidaService.eliminarUnidad(id);
         return ResponseEntity.noContent().build();
     }

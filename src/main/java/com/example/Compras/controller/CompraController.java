@@ -3,49 +3,67 @@ package com.example.Compras.controller;
 import com.example.Compras.dto.CompraRequestDTO;
 import com.example.Compras.dto.CompraResponseDTO;
 import com.example.Compras.services.CompraService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("compras")
-@Tag(name = "Compras", description = "Operaciones CRUD para las compras")
+@RequestMapping("/compras")
+@CrossOrigin(origins = "http://localhost:4200") // ✅ permite acceso directo desde Angular
 public class CompraController {
 
     private final CompraService compraService;
 
+    @Autowired
     public CompraController(CompraService compraService) {
         this.compraService = compraService;
     }
 
-    @Operation(summary = "Obtener una compra por ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<CompraResponseDTO> getCompra(@PathVariable Long id) {
-        CompraResponseDTO compra = compraService.getCompraById(id);
-        return ResponseEntity.ok(compra);
+
+
+    // ✅ Crear nueva compra
+    @PostMapping
+    public ResponseEntity<?> crearCompra(@RequestBody CompraRequestDTO request) {
+        try {
+            CompraResponseDTO response = compraService.crearCompra(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (RuntimeException ex) {
+            // Muestra el error de negocio, por ejemplo "Proveedor no encontrado"
+            ex.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("⚠️ Error al crear la compra: " + ex.getMessage());
+        } catch (Exception e) {
+            // Muestra cualquier otro error no controlado
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ Error inesperado en el servidor: " + e.getMessage());
+        }
     }
 
-    @Operation(summary = "Listar todas las compras")
-    @GetMapping()
-    public List<CompraResponseDTO> getAll() {
-        return compraService.getAllCompras();
-    }
-
-    @Operation(summary = "Crear una nueva compra")
-    @PostMapping()
-    public ResponseEntity<CompraResponseDTO> save(@RequestBody CompraRequestDTO compra) {
-        return ResponseEntity.ok(compraService.crearCompra(compra));
-    }
-
-    @Operation(summary = "Eliminar una compra")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarCompra(@PathVariable Long id) {
         compraService.eliminarCompra(id);
         return ResponseEntity.noContent().build();
     }
+
+
+
+    // ✅ (opcional) Obtener todas las compras para tu tabla
+    @GetMapping
+    public ResponseEntity<?> listarCompras() {
+        try {
+            return ResponseEntity.ok(compraService.getAllCompras());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ Error al listar las compras: " + e.getMessage());
+        }
+    }
 }
+
 
 

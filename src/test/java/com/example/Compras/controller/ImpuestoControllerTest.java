@@ -73,7 +73,7 @@ class ImpuestoControllerTest {
 
         ImpuestoResponseDTO response = new ImpuestoResponseDTO(2L, "Retefuente", 5.0);
 
-        when(impuestoService.actualizarImpuesto(eq(2), any(ImpuestoRequestDTO.class))).thenReturn(response);
+        when(impuestoService.actualizarImpuesto(eq(2L), any(ImpuestoRequestDTO.class))).thenReturn(response);
 
         mockMvc.perform(put("/impuestos/2")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -83,18 +83,18 @@ class ImpuestoControllerTest {
                 .andExpect(jsonPath("$.nombre").value("Retefuente"))
                 .andExpect(jsonPath("$.porcentaje").value(5.0));
 
-        verify(impuestoService).actualizarImpuesto(eq(2), any(ImpuestoRequestDTO.class));
+        verify(impuestoService).actualizarImpuesto(eq(2L), any(ImpuestoRequestDTO.class));
     }
 
     // 🧩 DELETE - Eliminar impuesto
     @Test
     void eliminarImpuesto_DeberiaRetornar204() throws Exception {
-        doNothing().when(impuestoService).eliminarImpuesto(1);
+        doNothing().when(impuestoService).eliminarImpuesto(1L);
 
         mockMvc.perform(delete("/impuestos/1"))
                 .andExpect(status().isNoContent());
 
-        verify(impuestoService).eliminarImpuesto(1);
+        verify(impuestoService).eliminarImpuesto(1L);
     }
 
     // 🧩 GET - Listar todos los impuestos
@@ -120,7 +120,7 @@ class ImpuestoControllerTest {
     @Test
     void obtenerPorId_DeberiaRetornarImpuestoPorId() throws Exception {
         ImpuestoResponseDTO response = new ImpuestoResponseDTO(1L, "IVA", 19.0);
-        when(impuestoService.obtenerImpuestoPorId(1)).thenReturn(response);
+        when(impuestoService.obtenerImpuestoPorId(1L)).thenReturn(response);
 
         mockMvc.perform(get("/impuestos/1"))
                 .andExpect(status().isOk())
@@ -128,7 +128,7 @@ class ImpuestoControllerTest {
                 .andExpect(jsonPath("$.nombre").value("IVA"))
                 .andExpect(jsonPath("$.porcentaje").value(19.0));
 
-        verify(impuestoService).obtenerImpuestoPorId(1);
+        verify(impuestoService).obtenerImpuestoPorId(1L);
     }
 }
 

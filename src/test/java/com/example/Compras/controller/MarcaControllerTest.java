@@ -2,7 +2,6 @@ package com.example.Compras.controller;
 
 import com.example.Compras.dto.MarcaRequestDTO;
 import com.example.Compras.dto.MarcaResponseDTO;
-import com.example.Compras.security.SecurityConfig;
 import com.example.Compras.services.MarcaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

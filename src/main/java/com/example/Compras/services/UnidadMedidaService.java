@@ -44,7 +44,7 @@ public class UnidadMedidaService {
 
     // Buscar por ID
     @Transactional(readOnly = true)
-    public UnidadMedidaResponseDTO buscarPorId(Integer id) {
+    public UnidadMedidaResponseDTO buscarPorId(Long id) {
         UnidadMedida unidad = unidadMedidaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró la unidad con id " + id));
         return new UnidadMedidaResponseDTO(unidad.getId(), unidad.getNombre());
@@ -52,7 +52,7 @@ public class UnidadMedidaService {
 
     // Actualizar unidad
     @Transactional
-    public UnidadMedidaResponseDTO actualizarUnidad(Integer id, UnidadMedidaRequestDTO request) {
+    public UnidadMedidaResponseDTO actualizarUnidad(Long id, UnidadMedidaRequestDTO request) {
         UnidadMedida unidad = unidadMedidaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró la unidad con id " + id));
 
@@ -70,7 +70,7 @@ public class UnidadMedidaService {
 
     // Eliminar unidad
     @Transactional
-    public void eliminarUnidad(Integer id) {
+    public void eliminarUnidad(Long id) {
         if (!unidadMedidaRepository.existsById(id)) {
             throw new IllegalArgumentException("No existe una unidad con id " + id);
         }

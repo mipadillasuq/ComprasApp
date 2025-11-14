@@ -3,13 +3,11 @@ package com.example.Compras.services;
 import com.example.Compras.dto.ProveedorRequestDTO;
 import com.example.Compras.dto.ProveedorResponseDTO;
 import com.example.Compras.dto.TelefonoRequestDTO;
+import com.example.Compras.entities.Ciudad;
 import com.example.Compras.entities.ProveedorTelefono;
 import com.example.Compras.entities.Telefono;
-import com.example.Compras.repositories.CompraRepository;
-import com.example.Compras.repositories.ProveedorRepository;
+import com.example.Compras.repositories.*;
 import com.example.Compras.entities.Proveedor;
-import com.example.Compras.repositories.ProveedorTelefonoRepository;
-import com.example.Compras.repositories.TelefonoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,72 +25,92 @@ public class ProveedorService {
     private ProveedorRepository proveedorRepository;
     @Autowired private TelefonoRepository telefonoRepository;
     @Autowired private ProveedorTelefonoRepository proveedorTelefonoRepository;
-    @Autowired private CompraRepository compraRepository; // para validar compras existentes
+    @Autowired private CompraRepository compraRepository;
+    @Autowired private CiudadRepository ciudadRepository;
 
+    // =========================================================
+    // 🟢 Crear nuevo proveedor
+    // =========================================================
     public ProveedorResponseDTO crearProveedor(ProveedorRequestDTO dto) {
-        if (proveedorRepository.existsById(dto.getIdProveedor())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Proveedor ya existe con ese id");
-        }
+
+        Ciudad ciudad = ciudadRepository.findById(dto.getCiudadId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ciudad no encontrada"));
 
         Proveedor p = new Proveedor();
-        p.setId(dto.getIdProveedor());
         p.setNombre(dto.getNombre());
-        p.setCiudadId(dto.getCiudadId());
         p.setDireccion(dto.getDireccion());
         p.setEmail(dto.getEmail());
-        p.setEstado(dto.getEstado() == null ? true : dto.getEstado());
+        p.setEstado(dto.getEstado() != null ? dto.getEstado() : true);
+        p.setCiudad(ciudad);
 
         Proveedor saved = proveedorRepository.save(p);
         return mapToResponse(saved);
     }
 
-    public ProveedorResponseDTO getProveedor(Long idProveedor) {
-        Proveedor p = proveedorRepository.findById(idProveedor)
+    // =========================================================
+    // 🟢 Obtener proveedor por ID
+    // =========================================================
+    public ProveedorResponseDTO getProveedor(Long id) {
+        Proveedor p = proveedorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
         return mapToResponse(p);
     }
 
+    // =========================================================
+    // 🟢 Listar todos los proveedores
+    // =========================================================
     public List<ProveedorResponseDTO> listarTodos() {
-        return proveedorRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+        return proveedorRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
+    // =========================================================
+    // 🟡 Eliminar proveedor
+    // =========================================================
     @Transactional
     public void eliminarProveedor(Long idProveedor) {
         Proveedor p = proveedorRepository.findById(idProveedor)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
 
-        // Regla: no eliminar si tiene compras asociadas
+        // Validar si tiene compras asociadas
         boolean tieneCompras = compraRepository.findAll()
                 .stream()
                 .anyMatch(c -> c.getProveedor() != null && idProveedor.equals(c.getProveedor().getId()));
+
         if (tieneCompras) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se puede eliminar proveedor con compras asociadas");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No se puede eliminar un proveedor con compras asociadas.");
         }
 
-        // borrar relaciones telefonos primero (por cascada podría no hacer falta)
+        // Eliminar relaciones con teléfonos (si existen)
         List<ProveedorTelefono> rels = proveedorTelefonoRepository.findByProveedorId(idProveedor);
-        proveedorTelefonoRepository.deleteAll(rels);
+        if (!rels.isEmpty()) {
+            proveedorTelefonoRepository.deleteAll(rels);
+        }
 
         proveedorRepository.delete(p);
     }
 
+    // =========================================================
+    // 🟢 Agregar teléfono a proveedor
+    // =========================================================
     @Transactional
     public ProveedorResponseDTO agregarTelefono(Long idProveedor, TelefonoRequestDTO telDto) {
         Proveedor p = proveedorRepository.findById(idProveedor)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
 
-        // buscar telefono existente por numero
-        Optional<Telefono> optTel = telefonoRepository.findByNumero(telDto.getNumero());
-        Telefono telefono = optTel.orElseGet(() -> {
-            Telefono t = new Telefono();
-            t.setNumero(telDto.getNumero());
-            return telefonoRepository.save(t);
-        });
+        Telefono telefono = telefonoRepository.findByNumero(telDto.getNumero())
+                .orElseGet(() -> {
+                    Telefono nuevo = new Telefono();
+                    nuevo.setNumero(telDto.getNumero());
+                    return telefonoRepository.save(nuevo);
+                });
 
-        // Evitar duplicado de relacion
         boolean existeRelacion = proveedorTelefonoRepository.existsByProveedorIdAndTelefonoId(idProveedor, telefono.getId());
         if (existeRelacion) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Teléfono ya asociado a este proveedor");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Teléfono ya asociado a este proveedor.");
         }
 
         ProveedorTelefono rel = new ProveedorTelefono();
@@ -100,28 +118,32 @@ public class ProveedorService {
         rel.setTelefono(telefono);
         proveedorTelefonoRepository.save(rel);
 
-        // recargar proveedor y devolver
         return mapToResponse(p);
     }
 
+    // =========================================================
+    // 🟡 Quitar teléfono
+    // =========================================================
     @Transactional
     public ProveedorResponseDTO quitarTelefono(Long idProveedor, Long idTelefono) {
         Proveedor p = proveedorRepository.findById(idProveedor)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
 
-        // buscar relación
         List<ProveedorTelefono> rels = proveedorTelefonoRepository.findByProveedorId(idProveedor)
-                .stream().filter(r -> r.getTelefono().getId().equals(idTelefono)).collect(Collectors.toList());
+                .stream()
+                .filter(r -> r.getTelefono().getId().equals(idTelefono))
+                .collect(Collectors.toList());
+
         if (rels.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Teléfono no asociado al proveedor");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Teléfono no asociado al proveedor.");
         }
 
         proveedorTelefonoRepository.deleteAll(rels);
 
-        // opcional: si teléfono no pertenece a nadie más, eliminar teléfono de la tabla
         boolean telefonoUsado = proveedorTelefonoRepository.findAll()
                 .stream()
                 .anyMatch(r -> r.getTelefono().getId().equals(idTelefono));
+
         if (!telefonoUsado) {
             telefonoRepository.findById(idTelefono).ifPresent(telefonoRepository::delete);
         }
@@ -129,21 +151,52 @@ public class ProveedorService {
         return mapToResponse(p);
     }
 
-    // Mapeo simple a DTO (números de teléfono)
+    // =========================================================
+    // 🟢 Actualizar proveedor
+    // =========================================================
+    @Transactional
+    public ProveedorResponseDTO actualizarProveedor(Long id, ProveedorRequestDTO dto) {
+        Proveedor proveedor = proveedorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proveedor no encontrado"));
+
+        proveedor.setNombre(dto.getNombre());
+        proveedor.setDireccion(dto.getDireccion());
+        proveedor.setEmail(dto.getEmail());
+        proveedor.setEstado(dto.getEstado());
+
+        if (dto.getCiudadId() != null) {
+            Ciudad ciudad = ciudadRepository.findById(dto.getCiudadId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ciudad no encontrada"));
+            proveedor.setCiudad(ciudad);
+        }
+
+        Proveedor actualizado = proveedorRepository.save(proveedor);
+        return mapToResponse(actualizado);
+    }
+
+    // =========================================================
+    // 🧭 Mapeo entidad -> DTO
+    // =========================================================
     private ProveedorResponseDTO mapToResponse(Proveedor p) {
         ProveedorResponseDTO r = new ProveedorResponseDTO();
-        r.setIdProveedor(p.getId());
+        r.setId(p.getId());
         r.setNombre(p.getNombre());
-        r.setCiudadId(p.getCiudadId());
         r.setDireccion(p.getDireccion());
         r.setEmail(p.getEmail());
         r.setEstado(p.getEstado());
+
+        if (p.getCiudad() != null) {
+            r.setCiudadId(p.getCiudad().getId());
+            r.setCiudadNombre(p.getCiudad().getNombre());
+        }
 
         List<String> telefonos = proveedorTelefonoRepository.findByProveedorId(p.getId())
                 .stream()
                 .map(rel -> rel.getTelefono().getNumero())
                 .collect(Collectors.toList());
         r.setTelefonos(telefonos);
+
         return r;
     }
 }
+

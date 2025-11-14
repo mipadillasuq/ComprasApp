@@ -1,11 +1,17 @@
 package com.example.Compras.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Entity
 @Table(name = "telefonos")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Telefono {
 
     @Id
@@ -15,21 +21,4 @@ public class Telefono {
 
     @Column(name = "numero", nullable = false, length = 15)
     private String numero;
-
-    @OneToMany(mappedBy = "telefono", cascade = CascadeType.ALL, orphanRemoval = false)
-    private List<ProveedorTelefono> proveedoresTelefonos;
-
-    public Telefono(Long id, String numero) {
-        this.id = id;
-        this.numero = numero;
-    }
-
-    public Telefono() {
-    }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getNumero() { return numero; }
-    public void setNumero(String numero) { this.numero = numero; }
 }

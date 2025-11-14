@@ -29,14 +29,14 @@ public class ImpuestoController {
 
     @Operation(summary = "Actualizar un impuesto")
     @PutMapping("/{id}")
-    public ResponseEntity<ImpuestoResponseDTO> actualizar(@PathVariable Integer id,
+    public ResponseEntity<ImpuestoResponseDTO> actualizar(@PathVariable Long id,
                                                           @Valid @RequestBody ImpuestoRequestDTO request) {
         return ResponseEntity.ok(impuestoService.actualizarImpuesto(id, request));
     }
 
     @Operation(summary = "Eliminar un impuesto")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         impuestoService.eliminarImpuesto(id);
         return ResponseEntity.noContent().build();
     }
@@ -47,7 +47,7 @@ public class ImpuestoController {
     }
     @Operation(summary = "Obtener un impuesto por ID")
     @GetMapping("/{id}")
-    public ResponseEntity<ImpuestoResponseDTO> obtenerPorId(@PathVariable Integer id) {
+    public ResponseEntity<ImpuestoResponseDTO> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(impuestoService.obtenerImpuestoPorId(id));
     }
 }

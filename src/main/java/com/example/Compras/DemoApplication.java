@@ -1,4 +1,5 @@
-package com.example.Compras;
+package com.example.compras;
+
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

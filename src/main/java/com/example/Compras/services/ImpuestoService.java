@@ -37,7 +37,7 @@ public class ImpuestoService {
     }
 
     // Actualizar impuesto existente
-    public ImpuestoResponseDTO actualizarImpuesto(Integer id, ImpuestoRequestDTO request) {
+    public ImpuestoResponseDTO actualizarImpuesto(Long id, ImpuestoRequestDTO request) {
         Impuesto impuesto = impuestoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el impuesto con id " + id));
 
@@ -56,7 +56,7 @@ public class ImpuestoService {
     }
 
     // Eliminar impuesto
-    public void eliminarImpuesto(Integer id) {
+    public void eliminarImpuesto(Long id) {
         if (!impuestoRepository.existsById(id)) {
             throw new IllegalArgumentException("No se encontró el impuesto con id " + id);
         }
@@ -73,7 +73,7 @@ public class ImpuestoService {
 
     // Obtener impuesto por ID
     @Transactional(readOnly = true)
-    public ImpuestoResponseDTO obtenerImpuestoPorId(Integer id) {
+    public ImpuestoResponseDTO obtenerImpuestoPorId(Long id) {
         Impuesto impuesto = impuestoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró el impuesto con id " + id));
 

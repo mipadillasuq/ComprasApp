@@ -1,17 +1,21 @@
 package com.example.Compras.controller;
+
 import com.example.Compras.dto.ProveedorTelefonoRequestDTO;
 import com.example.Compras.dto.ProveedorTelefonoResponseDTO;
 import com.example.Compras.services.ProveedorTelefonoService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("proveedor_telefono")
+@RequestMapping("/proveedor_telefono")
 @Tag(name = "Proveedor-Teléfono", description = "Operaciones CRUD para proveedores-teléfonos")
 public class ProveedorTelefonoController {
 
@@ -25,7 +29,9 @@ public class ProveedorTelefonoController {
     @PostMapping
     public ResponseEntity<ProveedorTelefonoResponseDTO> crearRelacion(
             @Valid @RequestBody ProveedorTelefonoRequestDTO request) {
-        return ResponseEntity.ok(proveedorTelefonoService.crearRelacion(request));
+
+        ProveedorTelefonoResponseDTO response = proveedorTelefonoService.crearRelacion(request);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Listar todas las relaciones proveedor-teléfono")
@@ -40,10 +46,11 @@ public class ProveedorTelefonoController {
         return ResponseEntity.ok(proveedorTelefonoService.listarPorProveedor(idProveedor));
     }
 
-    @Operation(summary = "Eliminar relacion telefonos y proveedores")
+    @Operation(summary = "Eliminar relación proveedor-teléfono")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarRelacion(@PathVariable Long id) {
         proveedorTelefonoService.eliminarRelacion(id);
         return ResponseEntity.noContent().build();
     }
 }
+

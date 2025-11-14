@@ -63,9 +63,8 @@ class ProveedorControllerTest {
 
         // ✅ Como tu DTO exige idProveedor con @NotNull, debemos incluirlo aquí
         proveedorRequest = new ProveedorRequestDTO();
-        proveedorRequest.setIdProveedor(3L);
         proveedorRequest.setNombre("Proveedor C");
-        proveedorRequest.setCiudadId(10L);
+        proveedorRequest.setCiudadId(10);
         proveedorRequest.setDireccion("Calle 123");
         proveedorRequest.setEmail("proveedorc@email.com");
         proveedorRequest.setEstado(true);

@@ -2,150 +2,142 @@ package com.example.Compras.services;
 
 import com.example.Compras.dto.CompraRequestDTO;
 import com.example.Compras.dto.CompraResponseDTO;
-import com.example.Compras.dto.DetalleCompraRequestDTO;
-import com.example.Compras.dto.DetalleCompraResponseDTO;
-import com.example.Compras.entities.*;
-import com.example.Compras.repositories.*;
+import com.example.Compras.entities.Compra;
+import com.example.Compras.entities.Proveedor;
+import com.example.Compras.entities.Usuario;
+import com.example.Compras.repositories.CompraRepository;
+import com.example.Compras.repositories.ProveedorRepository;
+import com.example.Compras.repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-
 public class CompraService {
 
     private final CompraRepository compraRepository;
     private final ProveedorRepository proveedorRepository;
     private final UsuarioRepository usuarioRepository;
-    private final ProductoRepository productoRepository;
-    private final DetalleCompraRepository detalleCompraRepository;
 
     public CompraService(CompraRepository compraRepository,
                          ProveedorRepository proveedorRepository,
-                         UsuarioRepository usuarioRepository,
-                         ProductoRepository productoRepository,
-                         DetalleCompraRepository detalleCompraRepository) {
+                         UsuarioRepository usuarioRepository) {
         this.compraRepository = compraRepository;
         this.proveedorRepository = proveedorRepository;
         this.usuarioRepository = usuarioRepository;
-        this.productoRepository = productoRepository;
-        this.detalleCompraRepository = detalleCompraRepository;
     }
 
-    /**
-     * Crea una compra (valida factura única, proveedor y usuario).
-     * Si vienen detalles, los guarda vinculados a la compra.
-     */
+    // ===========================
+    // 💾 CREAR COMPRA
+    // ===========================
     @Transactional
     public CompraResponseDTO crearCompra(CompraRequestDTO request) {
 
-        // 1. Validar numFactura único
-        compraRepository.findByNumFactura(request.getNumFactura()).ifPresent(c -> {
-            throw new RuntimeException("Ya existe una compra con el número de factura: " + request.getNumFactura());
-        });
+        // ✅ Validaciones de negocio
+        if (request == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La solicitud está vacía");
 
-        // 2. Validar proveedor
+        if (request.getNumFactura() == null || request.getNumFactura().trim().isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El número de factura es obligatorio");
+
+        if (request.getIdProveedor() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar un proveedor válido");
+
+        if (request.getIdUsuario() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar un usuario válido");
+
+        // ✅ Verificar factura duplicada
+        compraRepository.findByNumFactura(request.getNumFactura())
+                .ifPresent(c -> {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "Ya existe una compra con el número de factura: " + request.getNumFactura()
+                    );
+                });
+
+        // ✅ Buscar proveedor y usuario
         Proveedor proveedor = proveedorRepository.findById(request.getIdProveedor())
-                .orElseThrow(() -> new RuntimeException("Proveedor no encontrado con ID: " + request.getIdProveedor()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Proveedor no encontrado con ID: " + request.getIdProveedor()));
 
-        // 3. Validar usuario
         Usuario usuario = usuarioRepository.findById(request.getIdUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + request.getIdUsuario()));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado con ID: " + request.getIdUsuario()));
 
-        // 4. Crear compra sin detalles
+        // ✅ Convertir la fecha
+        LocalDate fecha;
+        try {
+            fecha = LocalDate.parse(request.getFecha());
+        } catch (DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Formato de fecha inválido. Use yyyy-MM-dd");
+        }
+
+        // ✅ Crear la entidad y guardar
         Compra compra = new Compra();
-        compra.setFecha(request.getFecha());
-        compra.setNumFactura(request.getNumFactura());
+        compra.setFecha(fecha);
+        compra.setNumFactura(request.getNumFactura().trim());
         compra.setProveedor(proveedor);
         compra.setUsuario(usuario);
 
-        compra = compraRepository.save(compra);
+        Compra guardada = compraRepository.save(compra);
 
-        // 5. Agregar detalles si existen
-        if (request.getDetalles() != null && !request.getDetalles().isEmpty()) {
-            for (DetalleCompraRequestDTO detReq : request.getDetalles()) {
-
-                Producto producto = productoRepository.findById(detReq.getIdProducto())
-                        .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + detReq.getIdProducto()));
-
-                DetalleCompra detalle = new DetalleCompra();
-                detalle.setCompra(compra);
-                detalle.setProducto(producto);
-                detalle.setCantidad(detReq.getCantidad());
-
-                detalleCompraRepository.save(detalle);
-            }
-            // recargar la lista de detalles en la compra (opcional)
-            compra.setDetalles(detalleCompraRepository.findByCompraId(compra.getId()));
-        }
-
-        // 6. Devolver DTO de respuesta
-        return mapToResponseDTO(compra);
+        // ✅ Retornar DTO
+        return mapToResponseDTO(guardada);
     }
 
-    /**
-     * Obtener compra por id
-     */
-    @Transactional
-    public CompraResponseDTO getCompraById(Long id) {
-        Compra compra = compraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Compra no encontrada con ID: " + id));
-        // asegurarnos de cargar detalles si no vienen
-        compra.setDetalles(detalleCompraRepository.findByCompraId(compra.getId()));
-        return mapToResponseDTO(compra);
-    }
-
-    /**
-     * Listar todas las compras
-     */
+    // ===========================
+    // 📋 LISTAR TODAS LAS COMPRAS
+    // ===========================
     @Transactional
     public List<CompraResponseDTO> getAllCompras() {
-        List<Compra> compras = compraRepository.findAll();
-        // cargar detalles por cada compra
-        compras.forEach(c -> c.setDetalles(detalleCompraRepository.findByCompraId(c.getId())));
-        return compras.stream()
+        return compraRepository.findAll()
+                .stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
 
+    // ===========================
+    // 🧭 OBTENER POR ID
+    // ===========================
+    @Transactional
+    public CompraResponseDTO getCompraById(Long id) {
+        Compra compra = compraRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Compra no encontrada con ID: " + id));
+        return mapToResponseDTO(compra);
+    }
+
+    // ===========================
+    // 🗑️ ELIMINAR COMPRA
+    // ===========================
 
     @Transactional
     public void eliminarCompra(Long id) {
         Compra compra = compraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Compra no encontrada con ID: " + id));
-        // eliminar detalles primero (si tu FK no tiene cascade)
-        List<DetalleCompra> detalles = detalleCompraRepository.findByCompraId(compra.getId());
-        if (detalles != null && !detalles.isEmpty()) {
-            detalleCompraRepository.deleteAll(detalles);
-        }
+                .orElseThrow(() -> new RuntimeException("Compra no encontrada con id: " + id));
+
         compraRepository.delete(compra);
     }
 
-    /**
-     * Mapea entidad Compra -> CompraResponseDTO (incluye detalles)
-     */
+
+
+    // ===========================
+    // 🔄 MAPEO ENTIDAD → DTO
+    // ===========================
     private CompraResponseDTO mapToResponseDTO(Compra compra) {
         CompraResponseDTO dto = new CompraResponseDTO();
         dto.setId(compra.getId());
         dto.setFecha(compra.getFecha());
         dto.setNumFactura(compra.getNumFactura());
-        dto.setIdProveedor(compra.getProveedor() != null ? compra.getProveedor().getId() : null);
-        dto.setIdUsuario(compra.getUsuario() != null ? compra.getUsuario().getId() : null);
-
-        List<DetalleCompraResponseDTO> detalles = compra.getDetalles() != null
-                ? compra.getDetalles().stream().map(det -> {
-            DetalleCompraResponseDTO d = new DetalleCompraResponseDTO();
-            // suponiendo DetalleCompra tiene getId()
-            d.setId(det.getIdDetalleCompra());
-            d.setIdProducto(det.getProducto() != null ? det.getProducto().getId() : null);
-            d.setCantidad(det.getCantidad());
-            return d;
-        }).collect(Collectors.toList())
-                : null;
-
-        dto.setDetalles(detalles);
+        dto.setIdProveedor(compra.getProveedor().getId());
+        dto.setIdUsuario(compra.getUsuario().getId());
         return dto;
     }
 }
